@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的藏書</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E📚%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="我的藏書">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+  --bg: #eef1ef;
+  --surface: #ffffff;
+  --ink: #15232a;
+  --muted: #5d6c72;
+  --line: #d3dbd8;
+  --accent: #1d5c4f;
+  --accent-ink: #ffffff;
+  --warn: #9a5b00;
+  --warn-bg: #fbf0d8;
+  --danger: #a3302a;
+  --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --sans: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11181b;
+    --surface: #1b262a;
+    --ink: #e6eeeb;
+    --muted: #93a4a9;
+    --line: #2c3a3f;
+    --accent: #5fc2a8;
+    --accent-ink: #0b1a16;
+    --warn: #f0c061;
+    --warn-bg: #3a2f14;
+    --danger: #ff8f86;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11181b; --surface: #1b262a; --ink: #e6eeeb; --muted: #93a4a9; --line: #2c3a3f;
+  --accent: #5fc2a8; --accent-ink: #0b1a16; --warn: #f0c061; --warn-bg: #3a2f14; --danger: #ff8f86;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; }
+main { max-width: 640px; margin: 0 auto; padding: 20px 16px 48px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+h1 { font-family: var(--serif); font-size: 28px; line-height: 1.2; margin: 0; letter-spacing: .02em; }
+#count { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 18px; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 4px; }
+input, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 8px; }
+.row > input { flex: 1; min-width: 0; }
+button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 10px 14px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button.link { border: 0; background: none; color: var(--accent); padding: 6px 4px; }
+button.danger { color: var(--danger); }
+button:disabled { opacity: .5; cursor: default; }
+#isbn { font-size: 18px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.notice { font-size: 14px; margin: 10px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--warn-bg); color: var(--warn); }
+.notice[hidden] { display: none; }
+.err { color: var(--danger); font-size: 14px; margin: 8px 0 0; min-height: 0; }
+#draft { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+#draft[hidden] { display: none; }
+.field { margin-bottom: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 96px; gap: 8px; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+#tools { display: flex; gap: 8px; margin-bottom: 12px; }
+#tools input { flex: 1; }
+ul { list-style: none; margin: 0; padding: 0; }
+.book { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+.spine { width: 10px; flex: none; }
+.body { flex: 1; min-width: 0; padding: 10px 12px; }
+.title { font-family: var(--serif); font-weight: 600; font-size: 17px; line-height: 1.35; overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.tap { all: unset; display: block; width: 100%; cursor: pointer; }
+.tap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.detail { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 14px; }
+.detail p { margin: 0 0 6px; overflow-wrap: anywhere; }
+.detail .actions { justify-content: flex-start; }
+.empty { text-align: center; color: var(--muted); padding: 28px 12px; border: 1px dashed var(--line); border-radius: 12px; }
+.row2 { display: flex; gap: 8px; margin-top: 8px; }
+.row2 button { flex: 1; }
+#scanner { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+#scanner[hidden] { display: none; }
+#video { flex: 1; width: 100%; min-height: 0; object-fit: cover; }
+#scanbar { padding: 12px 16px; background: #000; color: #fff; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+#toast { font-size: 15px; flex: 1; min-height: 24px; }
+#scanbar button { background: #fff; color: #000; border-color: #fff; font-weight: 600; }
+.guide { position: absolute; left: 10%; right: 10%; top: 38%; height: 18%; border: 2px solid rgba(255,255,255,.85); border-radius: 12px; pointer-events: none; }
+details { margin: 0 0 10px; }
+summary { cursor: pointer; color: var(--accent); font-size: 14px; padding: 4px 0; }
+select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; max-width: 42%; }
+.todo { color: var(--warn); }
+.links { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 8px; }
+.linkbtn { font-size: 14px; color: var(--accent); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; text-decoration: none; }
+footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>我的藏書</h1>
+    <span id="count"></span>
+  </header>
+
+  <section class="panel" aria-label="新增書籍">
+    <label for="isbn">ISBN（書背條碼上的 13 碼）</label>
+    <div class="row">
+      <input id="isbn" inputmode="numeric" autocomplete="off" placeholder="9789573317248">
+      <button class="primary" id="add">加入</button>
+    </div>
+    <div class="row2">
+      <button id="scan">掃條碼，連續建檔</button>
+      <button id="photobtn">拍照上傳</button>
+      <button id="manual">手動輸入新書</button>
+      <input type="file" id="photo" accept="image/*" capture="environment" hidden>
+    </div>
+    <p class="err" id="err" role="alert"></p>
+    <p class="notice" id="notice" hidden></p>
+
+    <div id="draft" hidden>
+      <div class="field"><label for="f-isbn">ISBN</label><input id="f-isbn" inputmode="numeric"></div>
+      <div class="field"><label for="f-title">書名</label><input id="f-title"></div>
+      <div class="field"><label for="f-author">作者／譯者</label><input id="f-author"></div>
+      <div class="grid2">
+        <div class="field"><label for="f-publisher">出版社</label><input id="f-publisher"></div>
+        <div class="field"><label for="f-pubdate">出版年月</label><input id="f-pubdate" placeholder="2024/03"></div>
+      </div>
+      <div class="field"><label for="f-category">類別</label><input id="f-category" list="cats" placeholder="例如：小說、心理、投資"><datalist id="cats"></datalist></div>
+      <div class="field"><label for="f-url">連結（書局或圖書館的商品頁網址）</label><input id="f-url" inputmode="url" placeholder="https://"></div>
+      <div class="field"><label for="f-note">備註</label><textarea id="f-note" rows="2" placeholder="放在哪個書櫃、借給誰…"></textarea></div>
+      <div class="actions">
+        <button id="cancel">取消</button>
+        <button class="primary" id="save">加入藏書</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="tools">
+    <input id="q" type="search" placeholder="搜尋書名、作者、ISBN" aria-label="搜尋藏書">
+    <select id="catfilter" aria-label="依類別篩選"></select>
+  </div>
+  <ul id="list"></ul>
+
+  <footer>
+    <span id="storage"></span>
+    <span><button class="link" id="export">匯出 CSV</button><button class="link" id="backup">匯出備份</button><button class="link" id="restorebtn">匯入備份</button></span>
+    <input type="file" id="restore" accept="application/json,.json" hidden>
+  </footer>
+</main>
+
+<div id="scanner" hidden>
+  <video id="video" playsinline muted></video>
+  <div class="guide"></div>
+  <div id="scanbar">
+    <div id="toast" role="status" aria-live="polite">把書背的條碼對準框內</div>
+    <button id="stopscan">完成</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var books = [];
+  var db = null, col = null;
+  var mode = 'local'; // 'server' | 'db' | 'local'
+  var LS_KEY = 'book-library-v1';
+  var editingId = null, openId = null;
+
+  /* ---------- storage ---------- */
+  function lsLoad() { try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch (e) { return []; } }
+  function lsSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(books)); } catch (e) {} }
+  function setStorageLabel() {
+    $('storage').textContent = mode === 'server' ? '儲存在你的電腦（books.json）'
+      : '儲存在這個瀏覽器，換裝置請用「匯出備份」搬資料';
+  }
+  function newId() { return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  async function loadServer() {
+    var r = await fetch('/api/books', { headers: { accept: 'application/json' } });
+    if (!r.ok || (r.headers.get('content-type') || '').indexOf('json') < 0) throw new Error('no server');
+    books = await r.json(); render();
+  }
+
+  async function initStorage() { books = lsLoad(); render(); setStorageLabel(); }
+
+  function fields(b) {
+    return { isbn: b.isbn || '', title: b.title || '', author: b.author || '', publisher: b.publisher || '',
+             pubdate: b.pubdate || '', category: b.category || '', url: b.url || '', note: b.note || '', added: b.added || Date.now() };
+  }
+  async function putBook(b) {
+    var data = fields(b);
+    if (mode === 'server') {
+      var r = await fetch('/api/books/' + encodeURIComponent(b.id), { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+      if (!r.ok) throw new Error('save');
+      await loadServer(); return;
+    }
+    if (mode === 'db' && col) { await col.doc(b.id).set(data); return; }
+    var i = books.findIndex(function (x) { return x.id === b.id; });
+    var rec = Object.assign({ id: b.id }, data);
+    if (i >= 0) books[i] = rec; else books.unshift(rec);
+    lsSave(); render();
+  }
+  async function removeBook(id) {
+    if (mode === 'server') { await fetch('/api/books/' + encodeURIComponent(id), { method: 'DELETE' }); await loadServer(); return; }
+    if (mode === 'db' && col) { await col.doc(id).delete(); return; }
+    books = books.filter(function (x) { return x.id !== id; }); lsSave(); render();
+  }
+
+  /* ---------- ISBN ---------- */
+  function cleanIsbn(s) { return (s || '').replace(/[\s-]/g, '').toUpperCase(); }
+  function validIsbn(s) {
+    if (/^\d{13}$/.test(s)) {
+      var sum = 0; for (var i = 0; i < 12; i++) sum += (+s[i]) * (i % 2 ? 3 : 1);
+      return (10 - (sum % 10)) % 10 === +s[12];
+    }
+    if (/^\d{9}[\dX]$/.test(s)) {
+      var t = 0; for (var j = 0; j < 9; j++) t += (+s[j]) * (10 - j);
+      t += s[9] === 'X' ? 10 : +s[9]; return t % 11 === 0;
+    }
+    return false;
+  }
+  function findByIsbn(isbn, exceptId) {
+    return books.find(function (b) { return b.id !== exceptId && cleanIsbn(b.isbn) === isbn; });
+  }
+  async function getJson(url) {
+    var c = new AbortController(); var t = setTimeout(function () { c.abort(); }, 8000);
+    try { var r = await fetch(url, { signal: c.signal }); if (!r.ok) throw new Error('http'); return await r.json(); }
+    finally { clearTimeout(t); }
+  }
+  function ym(s) { var m = String(s || '').match(/(\d{4})(?:[-\/.](\d{1,2}))?/); return m ? m[1] + (m[2] ? '/' + ('0' + m[2]).slice(-2) : '') : ''; }
+  async function serverLookup(isbn) {
+    try {
+      var j = await getJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn);
+      var v = j.items && j.items[0] && j.items[0].volumeInfo;
+      if (v && v.title) return { title: v.title + (v.subtitle ? '：' + v.subtitle : ''), author: (v.authors || []).join('、'),
+        publisher: v.publisher || '', pubdate: ym(v.publishedDate), category: (v.categories || [])[0] || '' };
+    } catch (e) { /* next source */ }
+    try {
+      var o = await getJson('https://openlibrary.org/api/books?bibkeys=ISBN:' + isbn + '&format=json&jscmd=data');
+      var b = o['ISBN:' + isbn];
+      if (b && b.title) return { title: b.title + (b.subtitle ? '：' + b.subtitle : ''), author: (b.authors || []).map(function (a) { return a.name; }).join('、'),
+        publisher: (b.publishers || []).map(function (p) { return p.name; }).join('、'), pubdate: ym(b.publish_date), category: ((b.subjects || [])[0] || {}).name || '' };
+    } catch (e) { /* none */ }
+    return null;
+  }
+
+  /* ---------- scanner ---------- */
+  var reader = null, lastCode = '', lastAt = 0, scanCount = 0;
+  function toast(t) { $('toast').textContent = t; }
+  async function startScan() {
+    $('err').textContent = '';
+    if (!window.ZXing) { $('err').textContent = '掃描元件沒有載入，請改用手動輸入。'; return; }
+    $('scanner').hidden = false; scanCount = 0; toast('把書背的條碼對準框內');
+    try {
+      var hints = new Map();
+      hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]);
+      reader = new ZXing.BrowserMultiFormatReader(hints, 300);
+      await reader.decodeFromVideoDevice(null, 'video', function (result) { if (result) onCode(result.getText()); });
+    } catch (e) {
+      stopScan();
+      $('err').textContent = '無法開啟相機。請允許相機權限，或改用手動輸入。';
+    }
+  }
+  function stopScan() {
+    try { if (reader) reader.reset(); } catch (e) {}
+    reader = null; $('scanner').hidden = true;
+    if (scanCount) { $('err').textContent = ''; }
+  }
+  async function onCode(text) {
+    var isbn = cleanIsbn(text);
+    var now = Date.now();
+    if (isbn === lastCode && now - lastAt < 3000) return;
+    if (!/^97[89]\d{10}$/.test(isbn) || !validIsbn(isbn)) return;
+    lastCode = isbn; lastAt = now;
+    var dup = findByIsbn(isbn);
+    if (dup) { toast('已經有了：' + (dup.title || isbn)); return; }
+    var b = { id: newId(), isbn: isbn, added: now };
+    var info = await serverLookup(isbn);
+    if (info) Object.assign(b, info);
+    try {
+      await putBook(b); scanCount++;
+      if (navigator.vibrate) navigator.vibrate(60);
+      toast('已建檔 ' + isbn + '（本次 ' + scanCount + ' 本）');
+    } catch (e) { toast('儲存失敗，可能沒有寫入權限。'); }
+  }
+
+  /* ---------- draft form ---------- */
+  function showDraft(v, notice) {
+    $('f-isbn').value = v.isbn || ''; $('f-title').value = v.title || ''; $('f-author').value = v.author || '';
+    $('f-publisher').value = v.publisher || ''; $('f-pubdate').value = v.pubdate || v.year || '';
+    $('f-category').value = v.category || ''; $('f-url').value = v.url || ''; $('f-note').value = v.note || '';
+    $('draft').hidden = false;
+    var n = $('notice');
+    if (notice) { n.textContent = notice; n.hidden = false; } else { n.hidden = true; }
+    $('f-title').focus();
+  }
+  function hideDraft() { $('draft').hidden = true; $('notice').hidden = true; $('save').textContent = '加入藏書'; editingId = null; }
+
+  async function onAdd() {
+    var err = $('err'); err.textContent = '';
+    var isbn = cleanIsbn($('isbn').value);
+    if (!isbn) { err.textContent = '請先輸入 ISBN。'; return; }
+    if (!validIsbn(isbn)) { err.textContent = 'ISBN 檢查碼不正確，請確認是否輸入錯誤。'; return; }
+    var dup = findByIsbn(isbn);
+    if (dup) { err.textContent = '這本已經在藏書裡：' + (dup.title || isbn); return; }
+    editingId = null;
+    var info = await serverLookup(isbn);
+    $('save').textContent = '加入藏書';
+    showDraft(Object.assign({ isbn: isbn }, info || {}),
+      info ? '資料來自網路書目（Google Books／Open Library），存檔前請核對。' : '網路書目查不到這本。直接存檔只會記下 ISBN，之後可以再補。');
+  }
+
+  async function onSave() {
+    var isbn = cleanIsbn($('f-isbn').value), title = $('f-title').value.trim();
+    var err = $('err'); err.textContent = '';
+    if (!isbn && !title) { err.textContent = 'ISBN 和書名至少要填一項。'; return; }
+    if (isbn && !validIsbn(isbn)) { err.textContent = 'ISBN 檢查碼不正確，請確認是否輸入錯誤。'; return; }
+    if (isbn && findByIsbn(isbn, editingId)) { err.textContent = '這個 ISBN 已經在藏書裡。'; return; }
+    var old = editingId ? books.find(function (b) { return b.id === editingId; }) : null;
+    var b = {
+      id: editingId || newId(), isbn: isbn, title: title,
+      author: $('f-author').value.trim(), publisher: $('f-publisher').value.trim(),
+      pubdate: $('f-pubdate').value.trim(), category: $('f-category').value.trim(),
+      url: $('f-url').value.trim(), note: $('f-note').value.trim(), added: old ? old.added : Date.now()
+    };
+    try { await putBook(b); $('isbn').value = ''; hideDraft(); }
+    catch (e) { err.textContent = '無法儲存：你可能沒有這個頁面的寫入權限。'; }
+  }
+
+  /* ---------- list ---------- */
+  function hue(s) { var h = 0; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function refreshCats() {
+    var set = {}; books.forEach(function (b) { if (b.category) set[b.category] = 1; });
+    var names = Object.keys(set).sort();
+    var cur = $('catfilter').value;
+    var sel = $('catfilter'); sel.textContent = '';
+    function opt(v, t) { var o = el('option', '', t); o.value = v; sel.appendChild(o); }
+    opt('', '全部類別'); opt('__todo', '待補資料');
+    names.forEach(function (n) { opt(n, n); });
+    sel.value = names.indexOf(cur) >= 0 || cur === '__todo' ? cur : '';
+    var dl = $('cats'); dl.textContent = '';
+    names.forEach(function (n) { var o = el('option'); o.value = n; dl.appendChild(o); });
+  }
+
+  function render() {
+    refreshCats();
+    var q = $('q').value.trim().toLowerCase(), cf = $('catfilter').value;
+    var shown = books.filter(function (b) {
+      if (cf === '__todo' && b.title) return false;
+      if (cf && cf !== '__todo' && b.category !== cf) return false;
+      if (!q) return true;
+      return [b.title, b.author, b.publisher, b.isbn, b.note, b.category].join(' ').toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return (b.added || 0) - (a.added || 0); });
+    $('count').textContent = books.length ? '共 ' + books.length + ' 本' : '';
+    var ul = $('list'); ul.textContent = '';
+    if (!shown.length) {
+      ul.appendChild(el('li', 'empty', books.length ? '沒有符合的書。' : '還沒有藏書。掃書背條碼或輸入 ISBN，開始建第一本。'));
+      return;
+    }
+    shown.forEach(function (b) {
+      var li = el('li', 'book');
+      var sp = el('div', 'spine'); sp.style.background = 'hsl(' + hue(b.title || b.isbn || '') + ' 38% 40%)';
+      var body = el('div', 'body');
+      var tap = el('button', 'tap'); tap.type = 'button';
+      tap.setAttribute('aria-expanded', openId === b.id ? 'true' : 'false');
+      tap.appendChild(el('div', b.title ? 'title' : 'title todo', b.title || '（待補資料）'));
+      var meta = b.title ? [b.author, b.publisher, b.pubdate || b.year].filter(Boolean).join('　') : (b.isbn || '');
+      if (meta) tap.appendChild(el('div', 'meta', meta));
+      tap.addEventListener('click', function () { openId = openId === b.id ? null : b.id; render(); });
+      body.appendChild(tap);
+      if (openId === b.id) {
+        var d = el('div', 'detail');
+        if (b.isbn) d.appendChild(el('p', '', 'ISBN：' + b.isbn));
+        if (b.category) d.appendChild(el('p', '', '類別：' + b.category));
+        if (b.note) d.appendChild(el('p', '', '備註：' + b.note));
+        var links = el('div', 'links');
+        var lk = function (text, href, copy) {
+          var a = el('a', 'linkbtn', text); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+          if (copy && b.isbn) a.addEventListener('click', function () { try { navigator.clipboard.writeText(b.isbn); } catch (e) {} });
+          links.appendChild(a);
+        };
+        if (b.isbn) {
+          lk('到博客來查', 'https://search.books.com.tw/search/query/key/' + encodeURIComponent(b.isbn) + '/cat/all');
+          lk('到國圖查（會複製 ISBN）', 'https://isbn.ncl.gov.tw/', true);
+          lk('到北市圖查（會複製 ISBN）', 'https://book.tpml.edu.tw/', true);
+        }
+        if (/^https?:\/\//i.test(b.url || '')) lk('開啟已存連結', b.url);
+        d.appendChild(links);
+        var act = el('div', 'actions');
+        var eb = el('button', 'link', b.title ? '編輯' : '補資料'); eb.type = 'button';
+        eb.addEventListener('click', function () {
+          editingId = b.id; $('save').textContent = '儲存修改';
+          showDraft(b, null); window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        var del = el('button', 'link danger', '刪除'); del.type = 'button';
+        del.addEventListener('click', async function () {
+          if (del.dataset.sure !== '1') { del.dataset.sure = '1'; del.textContent = '再按一次確認刪除'; return; }
+          try { await removeBook(b.id); openId = null; } catch (e) { $('err').textContent = '無法刪除：沒有寫入權限。'; }
+        });
+        act.appendChild(eb); act.appendChild(del); d.appendChild(act); body.appendChild(d);
+      }
+      li.appendChild(sp); li.appendChild(body); ul.appendChild(li);
+    });
+  }
+
+  /* ---------- export ---------- */
+  async function exportCsv() {
+    var head = ['書名', '作者', '出版社', '出版年月', '類別', 'ISBN', '備註'];
+    var rows = books.map(function (b) { return [b.title, b.author, b.publisher, b.pubdate || b.year, b.category, b.isbn, b.note]; });
+    var csv = '\ufeff' + [head].concat(rows).map(function (r) {
+      return r.map(function (c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\r\n');
+    try {
+      var dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+      if (dl) { await dl.save({ filename: '我的藏書.csv', data: csv }); return; }
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = '我的藏書.csv'; a.click();
+    } catch (e) { /* viewer declined */ }
+  }
+
+  /* ---------- photo ---------- */
+  async function shrink(file) {
+    var bmp = await createImageBitmap(file);
+    var s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    var c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(function (res) { c.toBlob(res, 'image/jpeg', 0.85); });
+  }
+
+  async function onPhoto(ev) {
+    var file = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!file) return;
+    var err = $('err'); err.textContent = '';
+    var btn = $('photobtn'); btn.disabled = true; btn.textContent = '辨識中…';
+    try {
+      // 1) 先在照片裡找條碼
+      var isbn = null;
+      if (window.ZXing) {
+        var url = URL.createObjectURL(file);
+        try {
+          var hints = new Map();
+          hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+          hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13]);
+          var res = await new ZXing.BrowserMultiFormatReader(hints).decodeFromImageUrl(url);
+          var c = cleanIsbn(res.getText());
+          if (/^97[89]\d{10}$/.test(c) && validIsbn(c)) isbn = c;
+        } catch (e) { /* no barcode found */ } finally { URL.revokeObjectURL(url); }
+      }
+      if (isbn) {
+        var dup = findByIsbn(isbn);
+        if (dup) { err.textContent = '這本已經在藏書裡：' + (dup.title || isbn); return; }
+        $('isbn').value = isbn; await onAdd(); return;
+      }
+      err.textContent = '照片裡讀不到條碼。請對準書背 978 開頭的條碼、拍清楚一點，或改用手動輸入。';
+    } catch (e) {
+      err.textContent = '辨識失敗，請重拍或手動輸入。';
+    } finally { btn.disabled = false; btn.textContent = '拍照上傳'; }
+  }
+
+  /* ---------- backup ---------- */
+  function exportBackup() {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(books, null, 2)], { type: 'application/json' }));
+    a.download = '藏書備份-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+  }
+  async function importBackup(ev) {
+    var f = ev.target.files && ev.target.files[0]; ev.target.value = '';
+    if (!f) return;
+    var err = $('err'); err.textContent = '';
+    try {
+      var list = JSON.parse(await f.text());
+      if (!Array.isArray(list)) throw new Error('format');
+      var added = 0;
+      list.forEach(function (r) {
+        if (!r || typeof r !== 'object') return;
+        var isbn = cleanIsbn(r.isbn);
+        if (books.some(function (b) { return b.id === r.id || (isbn && cleanIsbn(b.isbn) === isbn); })) return;
+        books.push(Object.assign({}, r, { id: r.id || newId() })); added++;
+      });
+      lsSave(); render(); err.textContent = '已匯入 ' + added + ' 本（重複的略過）。';
+    } catch (e) { err.textContent = '匯入失敗：請選擇從這個頁面匯出的備份檔。'; }
+  }
+
+  /* ---------- wiring ---------- */
+  $('add').addEventListener('click', onAdd);
+  $('isbn').addEventListener('keydown', function (e) { if (e.key === 'Enter') onAdd(); });
+  $('scan').addEventListener('click', startScan);
+  $('photobtn').addEventListener('click', function () { $('photo').click(); });
+  $('photo').addEventListener('change', onPhoto);
+  $('stopscan').addEventListener('click', stopScan);
+  $('save').addEventListener('click', onSave);
+  $('cancel').addEventListener('click', function () { hideDraft(); $('err').textContent = ''; });
+  $('manual').addEventListener('click', function () { editingId = null; $('save').textContent = '加入藏書'; showDraft({}, null); });
+  $('q').addEventListener('input', render);
+  $('catfilter').addEventListener('change', render);
+  $('export').addEventListener('click', exportCsv);
+  $('backup').addEventListener('click', exportBackup);
+  $('restorebtn').addEventListener('click', function () { $('restore').click(); });
+  $('restore').addEventListener('change', importBackup);
+
+  initStorage();
+})();
+</script>
+</body>
+</html>
