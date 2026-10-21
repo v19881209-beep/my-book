@@ -244,16 +244,22 @@ footer { display: flex; justify-content: space-between; align-items: center; mar
   function ym(s) { var m = String(s || '').match(/(\d{4})(?:[-\/.](\d{1,2}))?/); return m ? m[1] + (m[2] ? '/' + ('0' + m[2]).slice(-2) : '') : ''; }
   async function serverLookup(isbn) {
     try {
+      var d = await getJson('https://api.openbd.jp/v1/get?isbn=' + isbn);
+      var sm = d && d[0] && d[0].summary;
+      if (sm && sm.title) return { title: sm.title, author: sm.author || '', publisher: sm.publisher || '',
+        pubdate: ym(sm.pubdate), category: '', source: 'openBD' };
+    } catch (e) { /* next source */ }
+    try {
       var j = await getJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn);
       var v = j.items && j.items[0] && j.items[0].volumeInfo;
       if (v && v.title) return { title: v.title + (v.subtitle ? '：' + v.subtitle : ''), author: (v.authors || []).join('、'),
-        publisher: v.publisher || '', pubdate: ym(v.publishedDate), category: (v.categories || [])[0] || '' };
+        publisher: v.publisher || '', pubdate: ym(v.publishedDate), category: (v.categories || [])[0] || '', source: 'Google Books' };
     } catch (e) { /* next source */ }
     try {
       var o = await getJson('https://openlibrary.org/api/books?bibkeys=ISBN:' + isbn + '&format=json&jscmd=data');
       var b = o['ISBN:' + isbn];
       if (b && b.title) return { title: b.title + (b.subtitle ? '：' + b.subtitle : ''), author: (b.authors || []).map(function (a) { return a.name; }).join('、'),
-        publisher: (b.publishers || []).map(function (p) { return p.name; }).join('、'), pubdate: ym(b.publish_date), category: ((b.subjects || [])[0] || {}).name || '' };
+        publisher: (b.publishers || []).map(function (p) { return p.name; }).join('、'), pubdate: ym(b.publish_date), category: ((b.subjects || [])[0] || {}).name || '', source: 'Open Library' };
     } catch (e) { /* none */ }
     return null;
   }
@@ -321,7 +327,19 @@ footer { display: flex; justify-content: space-between; align-items: center; mar
     var info = await serverLookup(isbn);
     $('save').textContent = '加入藏書';
     showDraft(Object.assign({ isbn: isbn }, info || {}),
-      info ? '資料來自網路書目（Google Books／Open Library），存檔前請核對。' : '網路書目查不到這本。直接存檔只會記下 ISBN，之後可以再補。');
+      info ? '資料來自網路書目（' + (info.source || '網路') + '），存檔前請核對。' : '網路書目（openBD／Google Books／Open Library）查不到這本。直接存檔只會記下 ISBN，之後可以再補。');
+    if (!info) {
+      var n = $('notice');
+      n.appendChild(document.createElement('br'));
+      n.appendChild(document.createTextNode('可以自己查：'));
+      [['樂天ブックス', 'https://books.rakuten.co.jp/search?sitem=' + isbn],
+       ['博客來', 'https://search.books.com.tw/search/query/key/' + isbn + '/cat/all'],
+       ['Google', 'https://www.google.com/search?q=' + isbn]].forEach(function (x, i) {
+        if (i) n.appendChild(document.createTextNode('　'));
+        var a = document.createElement('a'); a.href = x[1]; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = x[0]; a.style.color = 'inherit'; a.style.textDecoration = 'underline'; n.appendChild(a);
+      });
+    }
   }
 
   async function onSave() {
